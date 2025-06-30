@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Mobile-friendly styles */
+html, body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better touch targets on mobile */
+button, 
+a {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Prevent content shift when scrollbar appears */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Prevent text size adjustment on orientation change */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Safe area insets for modern mobile devices */
+@supports(padding: max(0px)) {
+  body {
+    padding-left: min(0vmin, env(safe-area-inset-left));
+    padding-right: min(0vmin, env(safe-area-inset-right));
+    padding-bottom: min(0vmin, env(safe-area-inset-bottom));
+  }
+}
+
+/* Better form elements on mobile */
+input,
+select,
+textarea {
+  font-size: 16px; /* Prevents zoom on focus in iOS */
+}
+
+/* Improve mobile button active states */
+button:active {
+  transform: scale(0.98);
+}
+
+/* Add aspect ratio utilities */
+.aspect-w-16 {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+}
+
+.aspect-w-16 > iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* Add Satoshi as default font */
+* {
+  font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+}
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Custom font weights */
+.font-satoshi-regular {
+  font-weight: 400;
+}
+
+.font-satoshi-medium {
+  font-weight: 500;
+}
+
+.font-satoshi-bold {
+  font-weight: 700;
+}
+
+.font-satoshi-black {
+  font-weight: 900;
+} 
