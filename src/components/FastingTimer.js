@@ -1,44 +1,31 @@
 import React, { useState, useEffect } from 'react';
 
-export default function FastingTimer() {
-  const [startTime, setStartTime] = useState(() => {
-    const saved = localStorage.getItem('fastingStartTime');
-    return saved ? parseInt(saved) : null;
-  });
-  const [endTime, setEndTime] = useState(null);
-  const [isFasting, setIsFasting] = useState(() => {
-    return localStorage.getItem('isFasting') === 'true';
-  });
-  const [duration, setDuration] = useState(() => {
-    if (startTime && localStorage.getItem('isFasting') === 'true') {
-      return Date.now() - startTime;
-    }
-    return 0;
-  });
+export default function FastingTimer({ forceUpdate }) {
   const [fastHistory, setFastHistory] = useState(() => {
     const saved = localStorage.getItem('fastHistory');
     return saved ? JSON.parse(saved) : [];
   });
 
   useEffect(() => {
-    let timer;
-    if (isFasting && startTime) {
-      timer = setInterval(() => {
-        const newDuration = Date.now() - startTime;
-        setDuration(newDuration);
+    // Update the timer every second if we're fasting
+    const isFasting = localStorage.getItem('isFasting') === 'true';
+    if (isFasting) {
+      const interval = setInterval(() => {
+        forceUpdate();
       }, 1000);
+      return () => clearInterval(interval);
     }
-    return () => clearInterval(timer);
-  }, [isFasting, startTime]);
+  }, [forceUpdate]);
 
-  useEffect(() => {
-    if (startTime) {
-      localStorage.setItem('fastingStartTime', startTime.toString());
-    } else {
-      localStorage.removeItem('fastingStartTime');
-    }
-    localStorage.setItem('isFasting', isFasting.toString());
-  }, [startTime, isFasting]);
+  const getTimerState = () => {
+    const isFasting = localStorage.getItem('isFasting') === 'true';
+    const startTime = localStorage.getItem('fastingStartTime');
+    return {
+      isFasting,
+      startTime: startTime ? parseInt(startTime) : null,
+      currentTime: Date.now()
+    };
+  };
 
   const formatTime = ms => {
     const totalSec = Math.floor(ms / 1000);
@@ -50,26 +37,45 @@ export default function FastingTimer() {
 
   const startFast = () => {
     const now = Date.now();
-    setStartTime(now);
-    setIsFasting(true);
+    localStorage.setItem('isFasting', 'true');
+    localStorage.setItem('fastingStartTime', now.toString());
+    forceUpdate();
   };
 
   const endFast = () => {
     const now = Date.now();
-    setEndTime(now);
-    setIsFasting(false);
+    const startTime = parseInt(localStorage.getItem('fastingStartTime'));
     const fastDuration = now - startTime;
+
+    // Create new log entry
     const newLog = {
-      id: Date.now(),
+      id: now,
       start: new Date(startTime).toLocaleString(),
       end: new Date(now).toLocaleString(),
       duration: formatTime(fastDuration),
+      durationMs: fastDuration
     };
+
+    // Update history
     const updated = [newLog, ...fastHistory];
     setFastHistory(updated);
     localStorage.setItem('fastHistory', JSON.stringify(updated));
-    setStartTime(null);
-    setDuration(0);
+
+    // Clear fasting state
+    localStorage.setItem('isFasting', 'false');
+    localStorage.removeItem('fastingStartTime');
+    forceUpdate();
+  };
+
+  const { isFasting, startTime, currentTime } = getTimerState();
+  const currentDuration = isFasting && startTime ? currentTime - startTime : 0;
+
+  const getLongestFast = () => {
+    if (fastHistory.length === 0) return '0h 0m';
+    const longestDuration = Math.max(...fastHistory.map(f => f.durationMs || 0));
+    const hours = Math.floor(longestDuration / (1000 * 60 * 60));
+    const minutes = Math.floor((longestDuration % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m`;
   };
 
   return (
@@ -83,7 +89,7 @@ export default function FastingTimer() {
           {isFasting ? (
             <div>
               <div className="text-6xl font-bold text-blue-500 mb-4">
-                {formatTime(duration)}
+                {formatTime(currentDuration)}
               </div>
               <p className="text-lg text-gray-600 mb-6">
                 Current Fast Duration
@@ -132,13 +138,7 @@ export default function FastingTimer() {
           </div>
           <div className="bg-gray-50 rounded-xl p-4">
             <div className="text-2xl font-bold text-gray-900">
-              {fastHistory.length > 0
-                ? Math.max(...fastHistory.map(f => {
-                    const [h, m] = f.duration.split(':');
-                    return parseInt(h) * 60 + parseInt(m);
-                  })) + 'm'
-                : '0m'
-              }
+              {getLongestFast()}
             </div>
             <div className="text-sm text-gray-600">
               Longest Fast
